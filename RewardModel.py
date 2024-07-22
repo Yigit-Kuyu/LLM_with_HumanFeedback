@@ -23,17 +23,15 @@ if debug_mode==1:
 # Load the train and validation datasets
 train_dataset= load_dataset("Anthropic/hh-rlhf",split="train")
 test_dataset = load_dataset("Anthropic/hh-rlhf",split="test")
-# Take a subset of 800 examples from the training set
+# Take a subset of 800 examples from the training set for simplicity
 train_dataset = train_dataset .select(range(800))
-# Take a subset of 200 examples from the validation set
+# Take a subset of 200 examples from the validation set for simplicity
 test_dataset = test_dataset.select(range(200))
 
 
 
 
 from transformers import AutoTokenizer
-
-# Load model and tokenizer.
 tokenizer = AutoTokenizer.from_pretrained("microsoft/deberta-v3-base") 
 
 

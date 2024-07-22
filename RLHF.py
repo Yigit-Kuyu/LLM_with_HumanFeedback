@@ -25,7 +25,6 @@ reward_model = AutoModelForSequenceClassification.from_pretrained("./RewardModel
 
 
 
-
 # PPO configuration
 ppo_config = PPOConfig(
     model_name="./PPOOModel-final",
@@ -35,21 +34,14 @@ ppo_config = PPOConfig(
     gradient_accumulation_steps=1,
     optimize_cuda_cache=True,
     early_stopping=False,
-    target_kl=0.1,
+    target_kl=0.1, #KL divergence
     ppo_epochs=4,
     seed=42,
 )
 
-# Prepare the model for PPO training
+# Prepare the model for PPO training adding value-head to predict the expected reward (value) for a given input.
 ppo_model = AutoModelForCausalLMWithValueHead.from_pretrained(sft_model)
 
-
-'''
-def prepare_ppo_dataset(example):
-    return {
-        "query": f"Question: {example['question']}\n\nContext: {example['context']}\n\nAnswer:"
-    }
-'''
 
 def prepare_ppo_dataset(example):
     return {
@@ -64,8 +56,6 @@ ppo_model = ppo_model.to(device)
 reward_model = reward_model.to(device)
 
 
-
-
 # Initialize PPO Trainer
 ppo_trainer = PPOTrainer(
     config=ppo_config,
@@ -76,9 +66,9 @@ ppo_trainer = PPOTrainer(
     data_collator=None,
 )
 
+####### Training PPO
 
-
-num_epochs = 3
+num_epochs = 3 # just for simplicity
 for epoch in range(num_epochs):
     for batch in ppo_trainer.dataloader:
         query = batch["query"][0]  # Assuming batch size 1 for simplicity
@@ -128,7 +118,7 @@ for epoch in range(num_epochs):
         
         # Run PPO step with lists of tensors
         try:
-            stats = ppo_trainer.step([query_tensor], [response_tensor], [reward_tensor])
+            stats = ppo_trainer.step([query_tensor], [response_tensor], [reward_tensor]) #  Computing the advantage, updating the policy, updating the value function 
             print(f"Epoch {epoch}, Reward: {reward}")
             print(f"Query: {query}")
             print(f"Response: {response}")
@@ -149,5 +139,3 @@ for epoch in range(num_epochs):
 ppo_trainer.save_pretrained("./PPO-finetuned-model")
 
 
-## Add KL divergence
-## Human feedback
